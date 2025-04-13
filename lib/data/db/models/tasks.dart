@@ -1,10 +1,14 @@
 import 'package:jigsaw/data/db/base_object.dart';
 import 'package:jigsaw/data/db/models/projects.dart';
 import 'package:jigsaw/data/db/models/task_field_custom_values.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:objectbox/objectbox.dart';
+
+part 'tasks.g.dart';
 
 /// Main entity of 'Project' which provides different things
 @Entity()
+@JsonSerializable()
 class Tasks extends BaseObject {
   @Id()
   int id = 0;
@@ -18,4 +22,8 @@ class Tasks extends BaseObject {
   final customValues = ToMany<TaskCustomFieldValues>();
 
   Tasks({this.id = 0, required this.title, this.body});
+
+  factory Tasks.fromJson(Map<String, dynamic> json) => _$TasksFromJson(json);
+
+  Map<String, dynamic> toJson() => _$TasksToJson(this);
 }

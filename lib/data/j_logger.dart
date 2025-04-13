@@ -1,3 +1,3 @@
 import 'package:logger/logger.dart';
 
-final jLogger = Logger(level: Level.all);
+final jigLogger = Logger(level: Level.all);

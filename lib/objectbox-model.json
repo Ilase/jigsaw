@@ -139,7 +139,7 @@
     },
     {
       "id": "5:8050984854167619368",
-      "lastPropertyId": "1:2050342683567204832",
+      "lastPropertyId": "6:8228454637339746005",
       "name": "Users",
       "properties": [
         {
@@ -147,22 +147,69 @@
           "name": "id",
           "type": 6,
           "flags": 1
+        },
+        {
+          "id": "2:2868015118357428852",
+          "name": "nickname",
+          "type": 9
+        },
+        {
+          "id": "3:2897244942929560533",
+          "name": "fName",
+          "type": 9
+        },
+        {
+          "id": "4:929383039812151715",
+          "name": "lName",
+          "type": 9
+        },
+        {
+          "id": "5:2806959467996463379",
+          "name": "passwordHash",
+          "type": 9
+        },
+        {
+          "id": "6:8228454637339746005",
+          "name": "role",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "7:5104704193428192181",
+      "lastPropertyId": "2:3063652189332393292",
+      "name": "Roles",
+      "properties": [
+        {
+          "id": "1:6857263548629465411",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3063652189332393292",
+          "name": "role",
+          "type": 9
         }
       ],
       "relations": []
     }
   ],
-  "lastEntityId": "5:8050984854167619368",
+  "lastEntityId": "7:5104704193428192181",
   "lastIndexId": "4:6203653176727503638",
   "lastRelationId": "1:1470029959783021016",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,
-  "retiredEntityUids": [],
+  "retiredEntityUids": [
+    8121446131640161626
+  ],
   "retiredIndexUids": [],
   "retiredPropertyUids": [
     6449384158904302761,
-    4648203435906328928
+    4648203435906328928,
+    8496799606585803630
   ],
   "retiredRelationUids": [],
   "version": 1

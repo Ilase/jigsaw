@@ -2,9 +2,13 @@ import 'package:jigsaw/data/db/base_object.dart';
 import 'package:jigsaw/data/db/models/project_custom_fields.dart';
 import 'package:jigsaw/data/db/models/tasks.dart';
 import 'package:jigsaw/data/db/models/users.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:objectbox/objectbox.dart';
 
+part 'projects.g.dart';
+
 /// Project entity
+@JsonSerializable()
 @Entity()
 class Projects extends BaseObject {
   @Id()
@@ -32,4 +36,9 @@ class Projects extends BaseObject {
     required this.description,
     required this.readMe,
   });
+
+  factory Projects.fromJson(Map<String, dynamic> json) =>
+      _$ProjectsFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ProjectsToJson(this);
 }

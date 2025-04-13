@@ -27,6 +27,7 @@ class ApiService {
   void _setupRoutes() {
     _router.post('/login', _login);
     _router.get('/home', _home);
+    _router.get('/', _slash);
   }
 
   Future<Response> _login(Request request) async {
@@ -54,5 +55,9 @@ class ApiService {
 
   Future<Response> _home(Request request) async {
     return Response.ok(jsonEncode({'home': 'this sis'}));
+  }
+
+  Future<Response> _slash(Request request) async {
+    return Response.ok(jsonEncode({'gigi': 'g'}));
   }
 }
