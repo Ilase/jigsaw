@@ -4,3 +4,5 @@
 download
 *.exe
 *.g.dart
+build/
+/lib/objectbox-model.json

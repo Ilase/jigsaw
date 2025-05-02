@@ -17,13 +17,12 @@ class Users extends BaseObject {
 
   String passwordHash;
 
-  String role;
+  final role = ToOne<Roles>();
 
   Users({
     this.id = 0,
     required this.nickname,
     required this.passwordHash,
-    required this.role,
     this.fName,
     this.lName,
   });

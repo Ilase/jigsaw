@@ -1,15 +1,20 @@
 import 'package:objectbox/objectbox.dart';
+import 'package:json_annotation/json_annotation.dart';
+import 'package:jigsaw/data/db/base_object.dart';
 
+part 'roles.g.dart';
+
+@JsonSerializable()
 @Entity()
-class Roles {
+class Roles extends BaseObject {
   @Id()
   int id = 0;
-  String role;
 
-  Roles({this.id = 0, required this.role});
+  String name;
 
-  @override
-  String toString() {
-    return role.toString();
-  }
+  Roles({this.id = 0, required this.name});
+
+  factory Roles.fromJson(Map<String, dynamic> json) => _$RolesFromJson(json);
+
+  Map<String, dynamic> toJson() => _$RolesToJson(this);
 }

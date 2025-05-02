@@ -2,27 +2,21 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+import 'package:jigsaw/data/db/models/roles.dart';
+import 'package:jigsaw/data/db/models/users.dart';
+import 'package:jigsaw/objectbox.g.dart';
 import 'package:shelf/shelf.dart';
 
 class Authenticator {
-  //TODO: remake
-  final users = {
-    'user1': {
-      'username': 'user1',
-      'password': hashPassword('password1'),
-      // In real app, store hashed passwords
-      'role': 'user',
-    },
-    'admin': {
-      'username': 'admin',
-      'password': hashPassword('admin123'),
-      'role': 'admin',
-    },
-  };
-
   final String jwtSecret;
+  final Box<Roles> rolesBox;
+  final Box<Users> usersBox;
 
-  Authenticator({required this.jwtSecret});
+  Authenticator({
+    required this.jwtSecret,
+    required this.usersBox,
+    required this.rolesBox,
+  });
 
   static String hashPassword(String password) {
     return sha256.convert(utf8.encode(password)).toString();
@@ -36,12 +30,17 @@ class Authenticator {
       'exp': DateTime.now().add(Duration(hours: 1)).millisecondsSinceEpoch,
     });
 
-    String result = jwt.sign(SecretKey(jwtSecret));
-
-    return result;
+    return jwt.sign(SecretKey(jwtSecret));
   }
 
-  //Check of verified request and exclude some paths
+  Users? validateUser(String username, String password) {
+    final user =
+        usersBox.query(Users_.nickname.equals(username)).build().findFirst();
+    return (user != null && user.passwordHash == hashPassword(password))
+        ? user
+        : null;
+  }
+
   Middleware verifyJWT({List<String> excludedPaths = const []}) {
     return (Handler innerHandler) {
       return (Request request) {
