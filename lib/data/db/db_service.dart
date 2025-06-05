@@ -63,6 +63,7 @@ class ObjectBox {
         passwordHash: Authenticator.hashPassword('root'),
         fName: 'Super',
         lName: 'User',
+        email: 'email@example.com',
       )..role.target = adminRole;
       usersBox.put(rootUser);
       print("✅ Root user created");

@@ -15,13 +15,21 @@ class Tasks extends BaseObject {
 
   String title;
   String? body;
+  String? description;
+  String status;
 
   final project = ToOne<Projects>();
 
   @Backlink()
   final customValues = ToMany<TaskCustomFieldValues>();
 
-  Tasks({this.id = 0, required this.title, this.body});
+  Tasks({
+    this.id = 0,
+    required this.title,
+    this.body,
+    this.status = 'todo',
+    this.description,
+  });
 
   factory Tasks.fromJson(Map<String, dynamic> json) => _$TasksFromJson(json);
 

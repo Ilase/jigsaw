@@ -1,4 +1,5 @@
 import 'package:jigsaw/data/db/base_object.dart';
+import 'package:jigsaw/data/db/models/projects.dart';
 import 'package:jigsaw/data/db/models/roles.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:objectbox/objectbox.dart';
@@ -14,10 +15,11 @@ class Users extends BaseObject {
   String nickname;
   String? fName;
   String? lName;
-
+  String email;
   String passwordHash;
 
   final role = ToOne<Roles>();
+  final ToMany<Projects> collaboratedProjects = ToMany<Projects>();
 
   Users({
     this.id = 0,
@@ -25,6 +27,7 @@ class Users extends BaseObject {
     required this.passwordHash,
     this.fName,
     this.lName,
+    required this.email,
   });
 
   factory Users.fromJson(Map<String, dynamic> json) => _$UsersFromJson(json);

@@ -17,15 +17,19 @@ class Projects extends BaseObject {
   //General info
   String title;
   String description;
+
+  // @Property(type: PropertyType.string)
   String readMe;
+
+  int ownerId;
 
   /// Contains Tasks
   @Backlink()
   final tasks = ToMany<Tasks>();
 
   //
-  @Backlink()
-  List<Users> collaborators = ToMany<Users>();
+  @Backlink('collaboratedProjects')
+  final ToMany<Users> collaborators = ToMany<Users>();
 
   /// Contains ProjectCustomFields
   final customFields = ToMany<ProjectCustomFields>();
@@ -35,6 +39,7 @@ class Projects extends BaseObject {
     required this.title,
     required this.description,
     required this.readMe,
+    required this.ownerId,
   });
 
   factory Projects.fromJson(Map<String, dynamic> json) =>
