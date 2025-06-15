@@ -65,8 +65,7 @@ class ApiService {
     router.post('/refresh', _refreshToken);
 
     ///
-    router.get('/projects/<id>/tasks', _getProjectTasks);
-
+    // router.get('/projects/<id>/tasks', _getProjectTasks);
     ///
     router.post('/projects/<id>/tasks', _createTask);
     router.delete('/tasks/<taskId>', _deleteTask);
@@ -259,8 +258,8 @@ class ApiService {
       title: title.trim(),
       description: data['description'] ?? '',
       readMe: data['readMe'] ?? '',
-      ownerId: user.id, // 🧠 автор как владелец
-    )..collaborators.add(user); // 👥 автор сразу же — участник
+      ownerId: user.id,
+    )..collaborators.add(user);
 
     ObjectBox.instance.projectsBox.put(project);
 
@@ -280,6 +279,7 @@ class ApiService {
   Future<Response> _getUserProjects(Request request) async {
     final role = request.context['role'] as String?;
     final username = request.context['username'] as String?;
+
     if (username == null) {
       return Response.forbidden('Unauthorized: no username in context');
     }
@@ -301,6 +301,9 @@ class ApiService {
 
     final result =
         projects.map((p) {
+          // Подсчёт количества задач в проекте
+          final taskCount = p.tasks.length;
+
           return {
             'id': p.id,
             'title': p.title,
@@ -310,6 +313,7 @@ class ApiService {
                 ObjectBox.instance.usersBox.get(p.ownerId)?.nickname ??
                 'unknown',
             'collaborators': p.collaborators.map((u) => u.nickname).toList(),
+            'taskCount': taskCount, // Добавлено поле с количеством задач
           };
         }).toList();
 
@@ -522,8 +526,6 @@ class ApiService {
     final query = request.url.queryParameters;
     final search = query['search']?.toLowerCase() ?? '';
     final sort = query['sort'] ?? 'id_asc';
-    final page = int.tryParse(query['page'] ?? '1') ?? 1;
-    final limit = int.tryParse(query['limit'] ?? '10') ?? 10;
 
     var tasks =
         project.tasks.where((t) {
@@ -546,27 +548,18 @@ class ApiService {
       }
     });
 
-    // Pagination
-    final start = (page - 1) * limit;
-    final end = start + limit;
-    final pagedTasks = tasks.sublist(
-      start.clamp(0, tasks.length),
-      end.clamp(0, tasks.length),
-    );
-
     return Response.ok(
       jsonEncode({
         'total': tasks.length,
-        'page': page,
-        'limit': limit,
         'tasks':
-            pagedTasks
+            tasks
                 .map(
                   (t) => {
                     'id': t.id,
                     'title': t.title,
+                    'description': t.description,
                     'body': t.body,
-                    'status': t.status, // ← добавлено
+                    'status': t.status,
                   },
                 )
                 .toList(),
@@ -731,6 +724,7 @@ class ApiService {
       title: data['title'],
       body: data['body'] ?? '',
       status: data['status'] ?? 'todo',
+      description: data['description'] ?? '',
     );
     task.project.target = project;
     print('Создание задачи: title=${task.title}, status=${task.status}');
@@ -769,10 +763,60 @@ class ApiService {
     auth.tasksBox.put(task);
 
     return Response.ok(
-      jsonEncode({'status': 'обновлено'}),
+      jsonEncode({'status': 'updated'}),
       headers: {'Content-Type': 'application/json'},
     );
   }
+
+  // Future<Response> _updateTask(Request request, String taskId) async {
+  //   // Try to parse the taskId to an integer
+  //   final id = int.tryParse(taskId);
+  //   if (id == null) return Response.badRequest(body: 'Invalid task ID');
+  //
+  //   // Fetch the task from the database using the task ID
+  //   final task = auth.tasksBox.get(id);
+  //   if (task == null) return Response.notFound('Task not found');
+  //
+  //   // Read the request body to get updated task information
+  //   final body = await request.readAsString();
+  //   final data = jsonDecode(body) as Map<String, dynamic>;
+  //
+  //   // Check if the incoming request has the necessary task fields to update
+  //   if (data.containsKey('title')) {
+  //     task.title = data['title'];
+  //   }
+  //   if (data.containsKey('body')) {
+  //     task.body = data['body'];
+  //   }
+  //   if (data.containsKey('status')) {
+  //     task.status = data['status'];
+  //   }
+  //
+  //   // Optionally, you can add validation here to check the status, title, etc.
+  //   // For example, check if the new status is valid:
+  //   if (task.status != 'todo' &&
+  //       task.status != 'in_progress' &&
+  //       task.status != 'done') {
+  //     return Response(400, body: 'Invalid task status');
+  //   }
+  //
+  //   // Save the updated task to the database
+  //   auth.tasksBox.put(task);
+  //
+  //   // Return a success response with the updated task
+  //   return Response.ok(
+  //     jsonEncode({
+  //       'status': 'updated',
+  //       'task': {
+  //         'id': task.id,
+  //         'title': task.title,
+  //         'body': task.body,
+  //         'status': task.status,
+  //       },
+  //     }),
+  //     headers: {'Content-Type': 'application/json'},
+  //   );
+  // }
 
   Future<Response> _changeRootPass(Request request) async {
     final payload = await request.readAsString();
