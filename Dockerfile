@@ -11,6 +11,7 @@ COPY . .
 RUN curl -s https://raw.githubusercontent.com/objectbox/objectbox-dart/main/install.sh -o install.sh && \
     bash install.sh && \
     rm install.sh
+RUN dart pub run build_runner build --delete-conflicting-outputs
 
 RUN dart compile exe bin/jigsaw.dart -o bin/server
 
