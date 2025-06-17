@@ -1,63 +1,42 @@
-import 'dart:convert';
-
+import 'package:jigsaw/data/db/db_service.dart';
 import 'package:jigsaw/data/j_logger.dart';
+import 'package:jigsaw/domain/api/api_service.dart';
 import 'package:jigsaw/domain/api/config.dart';
 import 'package:jigsaw/domain/api/jwt/jwt_auth.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
+import 'package:shelf_cors_headers/shelf_cors_headers.dart';
 import 'package:shelf_router/shelf_router.dart';
 
 void main(List<String> args) async {
   ///Loading configuration file with port and jwtSecret key
   final config = await loadConfig('config/config.json');
 
+  ///Init point of database
+  ObjectBox.create();
+
   ///Setting up auth middleware
-  final auth = Authenticator(jwtSecret: config["secret"]);
-
-  jLogger.i("Server configuration: \n $config");
-
-  final api = Router();
-  //Handler for all requests
+  final auth = Authenticator(
+    jwtSecret: config['secret'],
+    usersBox: ObjectBox.instance.usersBox,
+    rolesBox: ObjectBox.instance.rolesBox,
+    tasksBox: ObjectBox.instance.taskBox,
+    projectsBox: ObjectBox.instance.projectsBox,
+  );
+  final apiService = ApiService(auth: auth);
   final handler = const Pipeline()
+      .addMiddleware(logRequests())
+      .addMiddleware(corsHeaders())
       .addMiddleware(
-        logRequests(
-          logger: (line, f) {
-            print("$line + || + ${f.toString()}");
-          },
+        auth.verifyJWT(
+          excludedPaths: ['api/v1/login', 'api/v1/refresh', 'api/v1/check'],
         ),
       )
-      .addMiddleware(auth.verifyJWT(excludedPaths: ['/login', '/']))
-      .addHandler(api.call);
+      // .addHandler(Router()..mount('/api/v1', apiService.router));
+      .addHandler((Router()..mount('/api/v1', apiService.router.call)).call);
 
-  api.post('/login', (Request request) async {
-    final body = await request.readAsString();
-    final data = jsonDecode(body) as Map<String, dynamic>;
+  jigLogger.i("Server configuration: \n $config");
 
-    //Get credentials
-    final username = data['username'] as String;
-    final password = data['password'] as String;
-
-    if (!auth.users.containsKey(username) ||
-        auth.users[username]!['password'] !=
-            Authenticator.hashPassword(password)) {
-      return Response.unauthorized('Invalid credentials');
-    }
-    final user = auth.users[username]!;
-    final String role = user['role'] as String;
-    final token = auth.generateJWT(username, role);
-
-    return Response.ok(
-      jsonEncode({"jigsawVersion": "0.1.0", "token": token}),
-      headers: {'Content-Type': 'application/json'},
-    );
-  });
-  api.get('/home', (Request request) {
-    return Response.ok(
-      jsonEncode({"jigsawVersion": "0.1.0"}),
-      headers: {'Content-Type': 'application/json'},
-    );
-  });
-
-  final server = await serve(handler, "localhost", config["port"]);
+  final server = await serve(handler, "0.0.0.0", config["port"]);
   print('Server listening on port ${server.port}');
 }

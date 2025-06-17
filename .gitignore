@@ -2,3 +2,9 @@
 # Created by `dart pub`
 .dart_tool/
 download
+*.exe
+*.g.dart
+build/
+/lib/objectbox-model.json
+objectbox/data.mdb
+objectbox/lock.mdb

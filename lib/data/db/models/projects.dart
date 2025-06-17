@@ -2,9 +2,13 @@ import 'package:jigsaw/data/db/base_object.dart';
 import 'package:jigsaw/data/db/models/project_custom_fields.dart';
 import 'package:jigsaw/data/db/models/tasks.dart';
 import 'package:jigsaw/data/db/models/users.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:objectbox/objectbox.dart';
 
+part 'projects.g.dart';
+
 /// Project entity
+@JsonSerializable()
 @Entity()
 class Projects extends BaseObject {
   @Id()
@@ -13,15 +17,19 @@ class Projects extends BaseObject {
   //General info
   String title;
   String description;
+
+  // @Property(type: PropertyType.string)
   String readMe;
+
+  int ownerId;
 
   /// Contains Tasks
   @Backlink()
   final tasks = ToMany<Tasks>();
 
   //
-  @Backlink()
-  List<Users> collaborators = ToMany<Users>();
+  @Backlink('collaboratedProjects')
+  final ToMany<Users> collaborators = ToMany<Users>();
 
   /// Contains ProjectCustomFields
   final customFields = ToMany<ProjectCustomFields>();
@@ -31,5 +39,11 @@ class Projects extends BaseObject {
     required this.title,
     required this.description,
     required this.readMe,
+    required this.ownerId,
   });
+
+  factory Projects.fromJson(Map<String, dynamic> json) =>
+      _$ProjectsFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ProjectsToJson(this);
 }
