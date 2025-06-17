@@ -57,6 +57,7 @@ class ApiService {
     router.patch('/users/root/password', _changeRootPass);
     router.post('/projects', _createProject);
     router.post('/projects/<projectId>/add-user', _addUserToProject);
+    router.post('/projects/<projectId>/add-users', _addUsersToProject);
     router.get('/projects', _getUserProjects);
     router.delete('/projects/<id>', _deleteProject);
     router.patch('/projects/<id>', _updateProject);
@@ -359,6 +360,65 @@ class ApiService {
     ObjectBox.instance.projectsBox.put(project);
 
     return Response.ok('User added to project');
+  }
+
+  Future<Response> _addUsersToProject(Request request, String projectId) async {
+    final role = request.context['role'] as String?;
+    if (role != 'admin' && role != 'worker') {
+      return Response.forbidden('Only admin or worker can modify projects');
+    }
+
+    final data = jsonDecode(await request.readAsString());
+    final nicknames = data['nicknames'] as List<dynamic>?;
+
+    if (nicknames == null || nicknames.isEmpty) {
+      return Response(400, body: 'Missing or empty nicknames list');
+    }
+
+    final project = ObjectBox.instance.projectsBox.get(int.parse(projectId));
+    if (project == null) {
+      return Response.notFound('Project not found');
+    }
+
+    final usersToAdd = <Users>[];
+    final notFound = <String>[];
+    final alreadyAdded = <String>[];
+
+    for (final nickname in nicknames) {
+      final user =
+          ObjectBox.instance.usersBox
+              .query(Users_.nickname.equals(nickname as String))
+              .build()
+              .findFirst();
+
+      if (user == null) {
+        notFound.add(nickname);
+        continue;
+      }
+
+      if (project.collaborators.any((u) => u.id == user.id)) {
+        alreadyAdded.add(nickname);
+        continue;
+      }
+
+      usersToAdd.add(user);
+    }
+
+    if (usersToAdd.isNotEmpty) {
+      project.collaborators.addAll(usersToAdd);
+      ObjectBox.instance.projectsBox.put(project);
+    }
+
+    final response = {
+      'added': usersToAdd.map((u) => u.nickname).toList(),
+      'not_found': notFound,
+      'already_added': alreadyAdded,
+    };
+
+    return Response.ok(
+      jsonEncode(response),
+      headers: {'Content-Type': 'application/json'},
+    );
   }
 
   Future<Response> _getProjectById(Request request, String id) async {
@@ -759,6 +819,7 @@ class ApiService {
     if (data.containsKey('title')) task.title = data['title'];
     if (data.containsKey('description')) task.description = data['description'];
     if (data.containsKey('status')) task.status = data['status'];
+    if (data.containsKey('body')) task.body = data['body'];
 
     auth.tasksBox.put(task);
 

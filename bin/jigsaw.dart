@@ -5,6 +5,7 @@ import 'package:jigsaw/domain/api/config.dart';
 import 'package:jigsaw/domain/api/jwt/jwt_auth.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
+import 'package:shelf_cors_headers/shelf_cors_headers.dart';
 import 'package:shelf_router/shelf_router.dart';
 
 void main(List<String> args) async {
@@ -25,6 +26,7 @@ void main(List<String> args) async {
   final apiService = ApiService(auth: auth);
   final handler = const Pipeline()
       .addMiddleware(logRequests())
+      .addMiddleware(corsHeaders())
       .addMiddleware(
         auth.verifyJWT(
           excludedPaths: ['api/v1/login', 'api/v1/refresh', 'api/v1/check'],
@@ -35,6 +37,6 @@ void main(List<String> args) async {
 
   jigLogger.i("Server configuration: \n $config");
 
-  final server = await serve(handler, "localhost", config["port"]);
+  final server = await serve(handler, "0.0.0.0", config["port"]);
   print('Server listening on port ${server.port}');
 }

@@ -1,21 +1,35 @@
-# Use latest stable channel SDK.
+# 1. Сборка приложения
 FROM dart:stable AS build
 
-# Resolve app dependencies.
 WORKDIR /app
 COPY pubspec.* ./
 RUN dart pub get
 
-# Copy app source code (except anything in .dockerignore) and AOT compile app.
 COPY . .
+
+# Скачиваем objectbox lib (после того, как исходники на месте!)
+RUN curl -s https://raw.githubusercontent.com/objectbox/objectbox-dart/main/install.sh -o install.sh && \
+    bash install.sh && \
+    rm install.sh
+
 RUN dart compile exe bin/jigsaw.dart -o bin/server
 
-# Build minimal serving image from AOT-compiled `/server`
-# and the pre-built AOT-runtime in the `/runtime/` directory of the base image.
-FROM scratch
+# 2. Финальный образ на Alpine
+FROM alpine:3.19
+
+# Устанавливаем необходимые библиотеки для запуска objectbox.so
+RUN apk add --no-cache libstdc++ bash
+
+WORKDIR /app
+
+# Копируем собранное приложение и зависимости
 COPY --from=build /runtime/ /
 COPY --from=build /app/bin/server /app/bin/
+COPY --from=build /app/lib/libobjectbox.so /app/lib/
+COPY --from=build /app/config/config.json /app/config/
 
-# Start server.
-EXPOSE 8080
-CMD ["/app/bin/server"]
+# (опционально) для отладки:
+RUN ls -l /app/lib/
+
+EXPOSE 80
+ENTRYPOINT ["/app/bin/server"]

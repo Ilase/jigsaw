@@ -6,3 +6,5 @@ download
 *.g.dart
 build/
 /lib/objectbox-model.json
+objectbox/data.mdb
+objectbox/lock.mdb
